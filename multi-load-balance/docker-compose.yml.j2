@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+{% for service in services %}
+  {{ service.name }}:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    networks:
+      - my_network
+    ports:
+      - "{{ service.host_port }}:{{ service.container_port }}"
+    environment:
+      - PORT={{ service.container_port }}
+{% endfor %}
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - my_network
+    depends_on:
+{% for service in services %}
+      - {{ service.name }}
+{% endfor %}
+
+networks:
+  my_network:
+    driver: bridge
